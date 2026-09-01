@@ -1,0 +1,29 @@
+# Never commit credentials
+.env
+*.env
+secrets*
+
+# Generated output. The dashboard HTML embeds the per-submission raw CSV
+# (province / OD / health centre / position / answers / score), so treat both as
+# data, not code - especially if this repo is ever public.
+CNM_RDT_Dashboard.html
+CNM_RDT_Results.csv
+CNM_RDT_Dashboard_SAMPLE.html
+CNM_RDT_Results_SAMPLE.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / editor noise
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+
+# R
+.Rhistory
+.RData
