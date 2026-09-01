@@ -27,3 +27,7 @@ desktop.ini
 # R
 .Rhistory
 .RData
+
+# local test artefacts
+_parity.html
+_livetest.html

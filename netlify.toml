@@ -1,0 +1,20 @@
+# Netlify configuration for the live RDT dashboard.
+#
+# There is no build step: netlify_public/index.html is generated locally by
+# build_netlify_site.py and committed, so Netlify only has to publish it and
+# bundle the function.
+
+[build]
+  publish  = "netlify_public"
+  functions = "netlify/functions"
+  command  = ""
+
+[functions]
+  # ESM + top-level await in the function and its imported lib/
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
