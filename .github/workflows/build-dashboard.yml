@@ -2,8 +2,11 @@ name: Build RDT dashboard
 
 on:
   schedule:
-    # 01:00 UTC = 08:00 Cambodia. GitHub cron is UTC only.
-    - cron: "0 1 * * *"
+    # Every 5 minutes - the shortest interval GitHub Actions accepts.
+    # In practice runs are often late and some are skipped when GitHub is busy;
+    # treat this as "a few times an hour", not a guarantee. See the notes in
+    # DEPLOY.md if the dashboard starts lagging or Pages deploys get throttled.
+    - cron: "*/5 * * * *"
   workflow_dispatch:        # adds a "Run workflow" button you can press any time
 
 permissions:
