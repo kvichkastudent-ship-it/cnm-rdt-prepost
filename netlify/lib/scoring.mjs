@@ -12,6 +12,7 @@ import {
   MAX_SCORE, PASS_THRESHOLD, OPTION_LETTERS, ANSWER_KEY,
   QUESTION_LABELS, OPTION_TEXTS, POSITION_LABELS, TESTTYPE_LABELS,
   PROVINCE_ORDER, PROVINCE_LABELS, PROVINCE_EN, EXPECTED_BY_PROVINCE,
+  EXPECTED_BY_PROVINCE_POSITION,
 } from "./constants.mjs";
 
 // ---------------------------------------------------------------------------
@@ -200,6 +201,33 @@ export function buildDashboardData(rows, generatedAt) {
   const extras = [...present].filter(p => !ordered.includes(p)).sort();
   const provinceOrder = ordered.concat(extras);
 
+  const labelToCode = {};
+  for (const c of Object.keys(PROVINCE_LABELS)) labelToCode[PROVINCE_LABELS[c]] = c;
+
+  // PMS / ODMS / HC detail for one province: expected vs received
+  const levelsFor = (provLabel, preP, postP) => {
+    const cfg = EXPECTED_BY_PROVINCE_POSITION[labelToCode[provLabel]] || {};
+    const known = Object.keys(cfg);
+    const extra = [...new Set([...preP, ...postP].map(r => r.position))]
+      .filter(p => !known.includes(p)).sort();
+    const out = [];
+    for (const pos of known.concat(extra)) {
+      const exp = Object.prototype.hasOwnProperty.call(cfg, pos) ? cfg[pos] : null;
+      const nPre = preP.filter(r => r.position === pos).length;
+      const nPost = postP.filter(r => r.position === pos).length;
+      if (exp === null && !nPre && !nPost) continue;
+      out.push({
+        position: pos,
+        expected: exp,
+        n_pre: nPre,
+        n_post: nPost,
+        missing_pre: exp === null ? null : Math.max(0, exp - nPre),
+        missing_post: exp === null ? null : Math.max(0, exp - nPost),
+      });
+    }
+    return out;
+  };
+
   const byProvince = provinceOrder.map(prov => {
     const preP = preRows.filter(r => r.province === prov);
     const postP = postRows.filter(r => r.province === prov);
@@ -216,6 +244,7 @@ export function buildDashboardData(rows, generatedAt) {
       expected,
       missing_pre: expected === null ? null : Math.max(0, expected - preP.length),
       missing_post: expected === null ? null : Math.max(0, expected - postP.length),
+      levels: levelsFor(prov, preP, postP),
     };
   });
 

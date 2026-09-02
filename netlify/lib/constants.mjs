@@ -236,3 +236,36 @@ export const EXPECTED_BY_PROVINCE = {
   "prov_5": 16,
   "prov_6": 26
 };
+
+export const EXPECTED_BY_PROVINCE_POSITION = {
+  "prov_1": {
+    "PMS": 1,
+    "ODMS": 1,
+    "HC": 18
+  },
+  "prov_2": {
+    "PMS": 1,
+    "ODMS": 1,
+    "HC": 18
+  },
+  "prov_3": {
+    "PMS": 1,
+    "ODMS": 4,
+    "HC": 32
+  },
+  "prov_4": {
+    "PMS": 1,
+    "ODMS": 2,
+    "HC": 9
+  },
+  "prov_5": {
+    "PMS": 1,
+    "ODMS": 4,
+    "HC": 11
+  },
+  "prov_6": {
+    "PMS": 1,
+    "ODMS": 4,
+    "HC": 21
+  }
+};

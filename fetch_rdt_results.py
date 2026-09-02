@@ -151,15 +151,30 @@ PROVINCE_LABELS = {
 # NOTE: this counts submissions per province, not per person. Without a
 # name/ID question on the form there is no way to say WHICH individuals are
 # missing - only how many.
+# Expected participants broken down by level, straight from the participant list
+# (បញ្ជីអ្នកចូលរួម_CNM.docx): one person per row, 6 PMS + 16 ODMS + 109 HC = 131.
+# The 109 health centres match the form's cascade list exactly.
+#
+#   PMS   Provincial Malaria Supervisor  (PHD level)
+#   ODMS  Operational District Malaria Supervisor
+#   HC    Health Centre staff
+#
+# Set a province to None to exclude it from tracking; set a level to 0 if that
+# level sends nobody.
+EXPECTED_BY_PROVINCE_POSITION = {
+    "prov_1": {"PMS": 1, "ODMS": 1, "HC": 18},   # Stung Treng       20
+    "prov_2": {"PMS": 1, "ODMS": 1, "HC": 18},   # Preah Vihear      20
+    "prov_3": {"PMS": 1, "ODMS": 4, "HC": 32},   # Siem Reap         37
+    "prov_4": {"PMS": 1, "ODMS": 2, "HC": 9},    # Oddar Meanchey    12
+    "prov_5": {"PMS": 1, "ODMS": 4, "HC": 11},   # Banteay Meanchey  16
+    "prov_6": {"PMS": 1, "ODMS": 4, "HC": 21},   # Kampong Speu      26
+}
+
+# Province totals are DERIVED, never typed twice - the level figures are the
+# single source of truth, so the two can never drift apart.
 EXPECTED_BY_PROVINCE = {
-    # From the training roster: PMS + ODMS + HC per province, total 133.
-    #   20 + 20 + 39 + 13 + 17 + 24
-    "prov_1": 20,   # Stung Treng
-    "prov_2": 20,   # Preah Vihear
-    "prov_3": 37,   # Siem Reap
-    "prov_4": 12,   # Oddar Meanchey
-    "prov_5": 16,   # Banteay Meanchey
-    "prov_6": 26,   # Kampong Speu
+    code: (sum(levels.values()) if levels else None)
+    for code, levels in EXPECTED_BY_PROVINCE_POSITION.items()
 }
 
 PROVINCE_EN = {
@@ -359,6 +374,32 @@ def build_dashboard_data(rows):
     expected_by_label = {PROVINCE_LABELS[c]: n
                          for c, n in EXPECTED_BY_PROVINCE.items() if n is not None}
 
+    # province label -> code, so the per-level config can be looked up by label
+    label_to_code = {PROVINCE_LABELS[c]: c for c in PROVINCE_LABELS}
+
+    def levels_for(prov_label, pre_p, post_p):
+        """PMS / ODMS / HC detail for one province: expected vs received."""
+        cfg = EXPECTED_BY_PROVINCE_POSITION.get(label_to_code.get(prov_label)) or {}
+        out = []
+        # roster order first (PHD level, then OD, then health centre), and any
+        # position that turned up in the data but is not on the roster after it
+        extra = sorted({r["position"] for r in pre_p + post_p} - set(cfg))
+        for pos in list(cfg.keys()) + extra:
+            exp = cfg.get(pos)
+            n_pre = sum(1 for r in pre_p if r["position"] == pos)
+            n_post = sum(1 for r in post_p if r["position"] == pos)
+            if exp is None and not n_pre and not n_post:
+                continue
+            out.append({
+                "position": pos,
+                "expected": exp,
+                "n_pre": n_pre,
+                "n_post": n_post,
+                "missing_pre": None if exp is None else max(0, exp - n_pre),
+                "missing_post": None if exp is None else max(0, exp - n_post),
+            })
+        return out
+
     by_province = []
     for prov in ordered:
         pre_p = [r for r in pre_rows if r.get("province") == prov]
@@ -377,6 +418,8 @@ def build_dashboard_data(rows):
                             if prov in expected_by_label else None),
             "missing_post": (max(0, expected_by_label[prov] - len(post_p))
                              if prov in expected_by_label else None),
+            # PMS / ODMS / HC breakdown, shown when a province row is expanded
+            "levels": levels_for(prov, pre_p, post_p),
         })
 
     # roll-up, over the provinces that actually have a figure

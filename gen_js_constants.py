@@ -60,6 +60,8 @@ def main():
         "PROVINCE_LABELS": dict(m.PROVINCE_LABELS),
         "PROVINCE_EN": dict(m.PROVINCE_EN),
         "EXPECTED_BY_PROVINCE": dict(m.EXPECTED_BY_PROVINCE),
+        "EXPECTED_BY_PROVINCE_POSITION": {k: dict(v) if v else v
+                                          for k, v in m.EXPECTED_BY_PROVINCE_POSITION.items()},
     }
 
     body = ["// GENERATED FILE - DO NOT EDIT BY HAND.",
