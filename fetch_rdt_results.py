@@ -152,12 +152,14 @@ PROVINCE_LABELS = {
 # name/ID question on the form there is no way to say WHICH individuals are
 # missing - only how many.
 EXPECTED_BY_PROVINCE = {
-    "prov_1": 12,   # Stung Treng
-    "prov_2": 12,   # Preah Vihear
-    "prov_3": 14,   # Siem Reap
-    "prov_4": 8,    # Oddar Meanchey
-    "prov_5": 8,    # Banteay Meanchey
-    "prov_6": 12,   # Kampong Speu
+    # From the training roster: PMS + ODMS + HC per province, total 133.
+    #   20 + 20 + 39 + 13 + 17 + 24
+    "prov_1": 20,   # Stung Treng
+    "prov_2": 20,   # Preah Vihear
+    "prov_3": 39,   # Siem Reap
+    "prov_4": 13,   # Oddar Meanchey
+    "prov_5": 17,   # Banteay Meanchey
+    "prov_6": 24,   # Kampong Speu
 }
 
 PROVINCE_EN = {
