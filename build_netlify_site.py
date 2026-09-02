@@ -24,6 +24,7 @@ Run this after ANY change to rdt_dashboard_template.html:
 
 import io
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -102,8 +103,12 @@ def main():
     # very end of the script. init() touches `let` bindings declared further down
     # the file, so invoking it any earlier hits the temporal dead zone and throws
     # "Cannot access 'charts' before initialization".
-    assert html.count("\ninit();\n") == 1, "expected exactly one bare init() call"
-    html = html.replace("\ninit();\n", "\nloadLive();   // calls init() once /api/data responds\n", 1)
+    # Line-ending agnostic on purpose: git checks these files out with CRLF on
+    # Windows, so a literal "\n init(); \n" match silently stops working after a
+    # fresh clone or a merge.
+    pat = re.compile(r"\r?\ninit\(\);\r?\n")
+    assert len(pat.findall(html)) == 1, "expected exactly one bare init() call"
+    html = pat.sub("\nloadLive();   // calls init() once /api/data responds\n", html, count=1)
 
     for gone in ("/*__DATA__*/", "/*__END_DATA__*/", "/*__CSV__*/", "/*__END_CSV__*/"):
         assert gone not in html, "marker left behind: %s" % gone

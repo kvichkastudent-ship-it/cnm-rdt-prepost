@@ -368,7 +368,12 @@ def build_dashboard_data(rows):
 
     # ---- average score by province (Results by Province) ----
     present = {r["province"] for r in rows if r.get("province")}
-    ordered = [PROVINCE_LABELS[c] for c in PROVINCE_ORDER if PROVINCE_LABELS[c] in present]
+    # A province with NO submissions yet must still be listed - that is exactly
+    # the row worth seeing (nothing received, everyone still missing). So take
+    # any province on the roster as well as any that turns up in the data.
+    on_roster = {PROVINCE_LABELS[c] for c, v in EXPECTED_BY_PROVINCE_POSITION.items() if v}
+    ordered = [PROVINCE_LABELS[c] for c in PROVINCE_ORDER
+               if PROVINCE_LABELS[c] in present or PROVINCE_LABELS[c] in on_roster]
     ordered += sorted(p for p in present if p not in ordered)   # anything off-roster, last
     # expected counts keyed by the Khmer label, so they line up with the rows below
     expected_by_label = {PROVINCE_LABELS[c]: n
@@ -406,7 +411,9 @@ def build_dashboard_data(rows):
         post_p = [r for r in post_rows if r.get("province") == prov]
         by_province.append({
             "province": prov,
-            "province_en": next((r.get("province_en", "") for r in rows if r.get("province") == prov), ""),
+            # by code, not by scanning rows - a province with no submissions still has a name
+            "province_en": PROVINCE_EN.get(label_to_code.get(prov), "")
+                           or next((r.get("province_en", "") for r in rows if r.get("province") == prov), ""),
             "n_pre": len(pre_p),
             "n_post": len(post_p),
             "pre_pct": avg([r["total_pct"] for r in pre_p]),
@@ -432,7 +439,7 @@ def build_dashboard_data(rows):
         tracking = {
             "expected_total": exp_total,
             "provinces_configured": len(expected_by_label),
-            "provinces_total": len(PROVINCE_LABELS),
+            "provinces_total": len(PROVINCE_ORDER),   # "other" is a choice, not a province
             "pre": {"submitted": sub_pre, "missing": max(0, exp_total - sub_pre),
                     "rate_pct": round(sub_pre / exp_total * 100, 1)},
             "post": {"submitted": sub_post, "missing": max(0, exp_total - sub_post),

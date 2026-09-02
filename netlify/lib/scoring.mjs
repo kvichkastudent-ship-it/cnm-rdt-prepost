@@ -197,7 +197,12 @@ export function buildDashboardData(rows, generatedAt) {
   }
 
   const present = new Set(rows.filter(r => r.province).map(r => r.province));
-  const ordered = PROVINCE_ORDER.map(c => PROVINCE_LABELS[c]).filter(l => present.has(l));
+  // Keep provinces with zero submissions in the list - that row is the point.
+  const onRoster = new Set(Object.keys(EXPECTED_BY_PROVINCE_POSITION)
+    .filter(c => EXPECTED_BY_PROVINCE_POSITION[c])
+    .map(c => PROVINCE_LABELS[c]));
+  const ordered = PROVINCE_ORDER.map(c => PROVINCE_LABELS[c])
+    .filter(l => present.has(l) || onRoster.has(l));
   const extras = [...present].filter(p => !ordered.includes(p)).sort();
   const provinceOrder = ordered.concat(extras);
 
@@ -236,7 +241,8 @@ export function buildDashboardData(rows, generatedAt) {
     const first = rows.find(r => r.province === prov);
     return {
       province: prov,
-      province_en: first && first.province_en ? first.province_en : "",
+      // by code, not by scanning rows - a province with no submissions still has a name
+      province_en: PROVINCE_EN[labelToCode[prov]] || (first && first.province_en) || "",
       n_pre: preP.length,
       n_post: postP.length,
       pre_pct: avg(preP.map(r => r.total_pct)),
@@ -258,7 +264,7 @@ export function buildDashboardData(rows, generatedAt) {
     tracking = {
       expected_total: expTotal,
       provinces_configured: Object.keys(expectedByLabel).length,
-      provinces_total: Object.keys(PROVINCE_LABELS).length,
+      provinces_total: PROVINCE_ORDER.length,   // "other" is a choice, not a province
       pre: { submitted: subPre, missing: Math.max(0, expTotal - subPre),
              rate_pct: pyRound(subPre / expTotal * 100, 1) },
       post: { submitted: subPost, missing: Math.max(0, expTotal - subPost),
