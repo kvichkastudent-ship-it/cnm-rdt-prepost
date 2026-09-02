@@ -229,10 +229,10 @@ export const PROVINCE_EN = {
 };
 
 export const EXPECTED_BY_PROVINCE = {
-  "prov_1": null,
-  "prov_2": null,
-  "prov_3": null,
-  "prov_4": null,
-  "prov_5": null,
-  "prov_6": null
+  "prov_1": 12,
+  "prov_2": 12,
+  "prov_3": 14,
+  "prov_4": 8,
+  "prov_5": 8,
+  "prov_6": 12
 };

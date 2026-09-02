@@ -81,7 +81,7 @@ OUTPUT_HTML = "CNM_RDT_Dashboard.html"
 OUTPUT_CSV = "CNM_RDT_Results.csv"
 # --sample writes to its own filenames so a preview can never overwrite a
 # dashboard built from real submissions (main() swaps these in).
-OUTPUT_HTML_SAMPLE = "CNM_RDT_Dashboard_SAMPLE.html"
+OUTPUT_HTML_SAMPLE = "CNM_RDT_Dashboard_SAMPLE.html" 
 OUTPUT_CSV_SAMPLE = "CNM_RDT_Results_SAMPLE.csv"
 TEMPLATE_HTML = "rdt_dashboard_template.html"
 
@@ -152,12 +152,12 @@ PROVINCE_LABELS = {
 # name/ID question on the form there is no way to say WHICH individuals are
 # missing - only how many.
 EXPECTED_BY_PROVINCE = {
-    "prov_1": None,   # Stung Treng
-    "prov_2": None,   # Preah Vihear
-    "prov_3": None,   # Siem Reap
-    "prov_4": None,   # Oddar Meanchey
-    "prov_5": None,   # Banteay Meanchey
-    "prov_6": None,   # Kampong Speu
+    "prov_1": 12,   # Stung Treng
+    "prov_2": 12,   # Preah Vihear
+    "prov_3": 14,   # Siem Reap
+    "prov_4": 8,    # Oddar Meanchey
+    "prov_5": 8,    # Banteay Meanchey
+    "prov_6": 12,   # Kampong Speu
 }
 
 PROVINCE_EN = {
