@@ -156,10 +156,10 @@ EXPECTED_BY_PROVINCE = {
     #   20 + 20 + 39 + 13 + 17 + 24
     "prov_1": 20,   # Stung Treng
     "prov_2": 20,   # Preah Vihear
-    "prov_3": 39,   # Siem Reap
-    "prov_4": 13,   # Oddar Meanchey
-    "prov_5": 17,   # Banteay Meanchey
-    "prov_6": 24,   # Kampong Speu
+    "prov_3": 37,   # Siem Reap
+    "prov_4": 12,   # Oddar Meanchey
+    "prov_5": 16,   # Banteay Meanchey
+    "prov_6": 26,   # Kampong Speu
 }
 
 PROVINCE_EN = {

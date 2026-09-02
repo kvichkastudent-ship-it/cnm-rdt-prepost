@@ -231,8 +231,8 @@ export const PROVINCE_EN = {
 export const EXPECTED_BY_PROVINCE = {
   "prov_1": 20,
   "prov_2": 20,
-  "prov_3": 39,
-  "prov_4": 13,
-  "prov_5": 17,
-  "prov_6": 24
+  "prov_3": 37,
+  "prov_4": 12,
+  "prov_5": 16,
+  "prov_6": 26
 };
