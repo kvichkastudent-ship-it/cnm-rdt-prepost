@@ -119,7 +119,7 @@ body{margin:0;background:var(--bg-page);font-family:'Kantumruy Pro',-apple-syste
 .chart-container canvas{max-height:340px;}
 .chart-full{grid-column:1/-1;}
 /* per-card PNG export - low contrast so it never competes with the chart */
-.png-btn{position:absolute;top:14px;right:16px;width:30px;height:30px;padding:0;
+.png-btn{position:absolute;top:14px;right:52px;width:30px;height:30px;padding:0;
   display:inline-flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;
   color:var(--text-secondary);background:#f4f7fc;border:1px solid #e5ebf5;
   transition:background .15s ease,color .15s ease;}
@@ -127,7 +127,24 @@ body{margin:0;background:var(--bg-page);font-family:'Kantumruy Pro',-apple-syste
 .png-btn:active{background:#dbe7f7;}
 /* keep the heading clear of it */
 .chart-container.has-png > h3,
-.chart-container.has-png > .subtitle{padding-right:44px;}
+.chart-container.has-png > .subtitle{padding-right:88px;}
+.chart-container > h3,
+.chart-container > .subtitle{padding-right:44px;}
+
+/* collapse a card down to its title */
+.fold-btn{position:absolute;top:14px;right:16px;width:30px;height:30px;padding:0;
+  display:inline-flex;align-items:center;justify-content:center;border-radius:7px;cursor:pointer;
+  color:var(--text-secondary);background:#f4f7fc;border:1px solid #e5ebf5;
+  font:700 17px/1 "Kantumruy Pro",sans-serif;transition:background .15s ease,color .15s ease;}
+.fold-btn:hover{background:#e6eefa;color:var(--grad-a);}
+.fold-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+/* hide everything except the heading, the subtitle and the two buttons */
+/* !important is needed: Chart.js writes display:block inline on every canvas,
+   and an inline style beats a stylesheet rule. */
+.chart-container.folded > *:not(h3):not(.subtitle):not(.fold-btn):not(.png-btn){display:none !important;}
+.chart-container.folded{padding-bottom:14px;}
+.chart-container.folded > .subtitle{margin-bottom:0;}
+.chart-container.folded .png-btn{display:none;}
 /* Pre vs Post distribution: a stat box beside its own histogram, one row per phase */
 .dist-block{display:grid;grid-template-columns:minmax(240px,300px) 1fr;gap:20px;align-items:center;margin-top:14px;}
 .dist-chart{position:relative;height:250px;}
@@ -228,6 +245,14 @@ tfoot .tot,#tracking-tbody tr.tot td{font-weight:800;background:#f4f7fc;}
         <rect x="4.5" y="2.8" width="15" height="18.4" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.9"/>
         <path d="M8 7h8M8.4 11.4h.01M12 11.4h.01M15.6 11.4h.01M8.4 15h.01M12 15h.01M15.6 15h.01M8.4 18.2h3.6M15.6 18.2h.01"
               fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button type="button" id="fold-all" class="dl-btn"
+            aria-label="បង្រួម ឬ ពង្រីកផ្នែកទាំងអស់ / Collapse or expand all sections"
+            title="បង្រួម ឬ ពង្រីកផ្នែកទាំងអស់ / Collapse or expand every section">
+      <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" focusable="false">
+        <path d="M8 9l4-4 4 4M8 15l4 4 4-4" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
     </div>
@@ -1026,6 +1051,84 @@ function cardToPngCanvas(card){
   return out;
 }
 
+// Every card can fold down to its title, so a 15,000px page can be skimmed.
+// The set of folded cards is remembered in this browser only.
+const FOLD_KEY = "rdt-folded-cards";
+
+function cardKey(card){
+  const t = card.querySelector(".en-title");
+  const h = card.querySelector("h3");
+  return (t ? t.textContent : (h ? h.textContent : "")).replace(/\s+/g, " ").trim().slice(0, 60);
+}
+
+function readFolded(){
+  try { return new Set(JSON.parse(localStorage.getItem(FOLD_KEY) || "[]")); }
+  catch(e){ return new Set(); }
+}
+
+function writeFolded(set){
+  try { localStorage.setItem(FOLD_KEY, JSON.stringify([...set])); } catch(e){}
+}
+
+function wireFold(){
+  const folded = readFolded();
+  const cards = [...document.querySelectorAll(".chart-container")]
+    .filter(c => c.querySelector("h3"));
+
+  cards.forEach(card => {
+    const key = cardKey(card);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "fold-btn";
+    const paint = () => {
+      const isFolded = card.classList.contains("folded");
+      btn.textContent = isFolded ? "+" : "\u2212";     // plus / minus sign
+      btn.title = (isFolded ? "\u1796\u1784\u17d2\u179a\u17b8\u1780 / Expand"
+                            : "\u1794\u1784\u17d2\u179a\u17bd\u1798 / Collapse") + " \u2014 " + key;
+      btn.setAttribute("aria-expanded", String(!isFolded));
+    };
+    if(folded.has(key)) card.classList.add("folded");
+    paint();
+    btn.addEventListener("click", () => {
+      card.classList.toggle("folded");
+      const set = readFolded();
+      card.classList.contains("folded") ? set.add(key) : set.delete(key);
+      writeFolded(set);
+      paint();
+      // charts sized while hidden come back wrong; nudge them once visible
+      if(!card.classList.contains("folded")){
+        card.querySelectorAll("canvas").forEach(cv => {
+          const ch = Chart.getChart(cv);
+          if(ch) ch.resize();
+        });
+      }
+    });
+    card.appendChild(btn);
+  });
+
+  const all = document.getElementById("fold-all");
+  if(all){
+    all.addEventListener("click", () => {
+      // if anything is open, fold everything; otherwise open everything
+      const anyOpen = cards.some(c => !c.classList.contains("folded"));
+      const set = new Set();
+      cards.forEach(card => {
+        card.classList.toggle("folded", anyOpen);
+        if(anyOpen) set.add(cardKey(card));
+        card.querySelector(".fold-btn").textContent = anyOpen ? "+" : "\u2212";
+        card.querySelector(".fold-btn").setAttribute("aria-expanded", String(!anyOpen));
+      });
+      writeFolded(set);
+      if(!anyOpen){
+        document.querySelectorAll("canvas").forEach(cv => {
+          const ch = Chart.getChart(cv);
+          if(ch) ch.resize();
+        });
+      }
+    });
+  }
+}
+
 function wirePngExport(){
   const done = new Set();
   PNG_CARDS.forEach(id => {
@@ -1098,6 +1201,7 @@ function init(){
   renderDetailTable(d.by_question);
   wireDownload();
   wirePngExport();
+  wireFold();
   wireFormulas(d);
   renderPerQuestionPies(d.by_question);
 }
