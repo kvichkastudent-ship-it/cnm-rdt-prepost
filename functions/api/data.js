@@ -12,5 +12,5 @@
 
 import { buildResponse } from "../../lib/kobo.mjs";
 
-export const onRequestGet = ({ env }) =>
-  buildResponse(env, "Cloudflare (Settings -> Variables and Secrets)");
+export const onRequestGet = ({ env, request }) =>
+  buildResponse(env, "Cloudflare (Settings -> Variables and Secrets)", request?.url);

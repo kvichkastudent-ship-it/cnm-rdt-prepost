@@ -13,7 +13,7 @@ export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
     if (pathname === "/api/data") {
-      return buildResponse(env, "Cloudflare (Settings -> Variables and Secrets)");
+      return buildResponse(env, "Cloudflare (Settings -> Variables and Secrets)", request.url);
     }
     return new Response("Not found", { status: 404 });
   },

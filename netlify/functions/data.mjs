@@ -8,7 +8,7 @@
 
 import { buildResponse } from "../../lib/kobo.mjs";
 
-export default () =>
-  buildResponse(process.env, "Netlify (Site configuration -> Environment variables)");
+export default (req) =>
+  buildResponse(process.env, "Netlify (Site configuration -> Environment variables)", req?.url);
 
 export const config = { path: "/api/data" };
