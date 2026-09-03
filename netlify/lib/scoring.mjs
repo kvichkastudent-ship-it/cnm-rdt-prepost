@@ -12,7 +12,7 @@ import {
   MAX_SCORE, PASS_THRESHOLD, OPTION_LETTERS, ANSWER_KEY,
   QUESTION_LABELS, OPTION_TEXTS, POSITION_LABELS, TESTTYPE_LABELS,
   PROVINCE_ORDER, PROVINCE_LABELS, PROVINCE_EN, EXPECTED_BY_PROVINCE,
-  EXPECTED_BY_PROVINCE_POSITION,
+  EXPECTED_BY_PROVINCE_POSITION, NGO_BUCKET_KH, NGO_BUCKET_EN,
 } from "./constants.mjs";
 
 // ---------------------------------------------------------------------------
@@ -60,9 +60,9 @@ export function scoreSubmission(sub) {
     position: (rawPos in POSITION_LABELS) ? POSITION_LABELS[rawPos] : (rawPos || "Unknown"),
     // NGO/partner staff are never asked for a province; give them their own
     // bucket rather than one called "Unknown".
-    province: (rawPos === "ngo" && !rawProv) ? "NGO / ដៃគូ"
+    province: (rawPos === "ngo" && !rawProv) ? NGO_BUCKET_KH
               : (rawProv in PROVINCE_LABELS) ? PROVINCE_LABELS[rawProv] : (rawProv || "Unknown"),
-    province_en: (rawPos === "ngo" && !rawProv) ? "NGO / Partner"
+    province_en: (rawPos === "ngo" && !rawProv) ? NGO_BUCKET_EN
                  : (rawProv in PROVINCE_EN) ? PROVINCE_EN[rawProv] : "",
     od: getField(sub, "od"),
     hc: getField(sub, "hc"),
@@ -147,7 +147,11 @@ export function buildDashboardData(rows, generatedAt) {
   }
 
   // ---- by position --------------------------------------------------------
-  const positions = [...new Set(rows.map(r => r.position))].sort();
+  // Roster order, not alphabetical, and NGO/Partner listed even with nothing
+  // received yet - see the matching comment in fetch_rdt_results.py.
+  const always = ["PMS", "ODMS", "HC", POSITION_LABELS["ngo"]];
+  const seen = new Set(rows.map(r => r.position));
+  const positions = always.concat([...seen].filter(p => !always.includes(p)).sort());
   const byPosition = positions.map(pos => {
     const preP = preRows.filter(r => r.position === pos);
     const postP = postRows.filter(r => r.position === pos);
@@ -208,8 +212,10 @@ export function buildDashboardData(rows, generatedAt) {
     .map(c => PROVINCE_LABELS[c]));
   const ordered = PROVINCE_ORDER.map(c => PROVINCE_LABELS[c])
     .filter(l => present.has(l) || onRoster.has(l));
-  const extras = [...present].filter(p => !ordered.includes(p)).sort();
-  const provinceOrder = ordered.concat(extras);
+  const extras = [...present]
+    .filter(p => !ordered.includes(p) && p !== NGO_BUCKET_KH).sort();
+  // NGO/partner staff have no province, so they get their own row at the bottom.
+  const provinceOrder = ordered.concat(extras, [NGO_BUCKET_KH]);
 
   const labelToCode = {};
   for (const c of Object.keys(PROVINCE_LABELS)) labelToCode[PROVINCE_LABELS[c]] = c;
@@ -247,7 +253,8 @@ export function buildDashboardData(rows, generatedAt) {
     return {
       province: prov,
       // by code, not by scanning rows - a province with no submissions still has a name
-      province_en: PROVINCE_EN[labelToCode[prov]] || (first && first.province_en) || "",
+      province_en: prov === NGO_BUCKET_KH ? NGO_BUCKET_EN
+                   : (PROVINCE_EN[labelToCode[prov]] || (first && first.province_en) || ""),
       n_pre: preP.length,
       n_post: postP.length,
       pre_pct: avg(preP.map(r => r.total_pct)),
@@ -255,7 +262,8 @@ export function buildDashboardData(rows, generatedAt) {
       expected,
       missing_pre: expected === null ? null : Math.max(0, expected - preP.length),
       missing_post: expected === null ? null : Math.max(0, expected - postP.length),
-      levels: levelsFor(prov, preP, postP),
+      // NGO/partner is one group, not a province with PMS/OD/HC underneath
+      levels: prov === NGO_BUCKET_KH ? [] : levelsFor(prov, preP, postP),
     };
   });
 

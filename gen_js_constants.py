@@ -59,6 +59,8 @@ def main():
         "PROVINCE_ORDER": list(m.PROVINCE_ORDER),
         "PROVINCE_LABELS": dict(m.PROVINCE_LABELS),
         "PROVINCE_EN": dict(m.PROVINCE_EN),
+        "NGO_BUCKET_KH": m.NGO_BUCKET_KH,
+        "NGO_BUCKET_EN": m.NGO_BUCKET_EN,
         "EXPECTED_BY_PROVINCE": dict(m.EXPECTED_BY_PROVINCE),
         "EXPECTED_BY_PROVINCE_POSITION": {k: dict(v) if v else v
                                           for k, v in m.EXPECTED_BY_PROVINCE_POSITION.items()},

@@ -336,8 +336,15 @@ def build_dashboard_data(rows):
             "options": options,
         })
 
+    # Roster order (province level, then OD, then health centre, then partners)
+    # rather than alphabetical, so the groups read in the same order as the
+    # chart title and the per-province breakdown. NGO/Partner is listed even
+    # with nothing received yet, so the group is visibly tracked rather than
+    # silently absent; the chart draws no bar for an empty group.
+    always = ["PMS", "ODMS", "HC", POSITION_LABELS["ngo"]]
+    seen = set(r["position"] for r in rows)
     by_position = []
-    for pos in sorted(set(r["position"] for r in rows)):
+    for pos in always + sorted(seen - set(always)):
         pre_p = [r for r in pre_rows if r["position"] == pos]
         post_p = [r for r in post_rows if r["position"] == pos]
         by_position.append({
@@ -387,7 +394,12 @@ def build_dashboard_data(rows):
     on_roster = {PROVINCE_LABELS[c] for c, v in EXPECTED_BY_PROVINCE_POSITION.items() if v}
     ordered = [PROVINCE_LABELS[c] for c in PROVINCE_ORDER
                if PROVINCE_LABELS[c] in present or PROVINCE_LABELS[c] in on_roster]
-    ordered += sorted(p for p in present if p not in ordered)   # anything off-roster, last
+    ordered += sorted(p for p in present if p not in ordered
+                      and p != NGO_BUCKET_KH)                  # anything off-roster
+    # NGO/partner staff have no province at all, so they get their own row at
+    # the bottom rather than being filed under a province they never chose.
+    # Listed even when nothing has come in, for the same reason as the provinces.
+    ordered.append(NGO_BUCKET_KH)
     # expected counts keyed by the Khmer label, so they line up with the rows below
     expected_by_label = {PROVINCE_LABELS[c]: n
                          for c, n in EXPECTED_BY_PROVINCE.items() if n is not None}
@@ -425,8 +437,9 @@ def build_dashboard_data(rows):
         by_province.append({
             "province": prov,
             # by code, not by scanning rows - a province with no submissions still has a name
-            "province_en": PROVINCE_EN.get(label_to_code.get(prov), "")
-                           or next((r.get("province_en", "") for r in rows if r.get("province") == prov), ""),
+            "province_en": (NGO_BUCKET_EN if prov == NGO_BUCKET_KH else
+                            PROVINCE_EN.get(label_to_code.get(prov), "")
+                            or next((r.get("province_en", "") for r in rows if r.get("province") == prov), "")),
             "n_pre": len(pre_p),
             "n_post": len(post_p),
             "pre_pct": avg([r["total_pct"] for r in pre_p]),
@@ -439,7 +452,9 @@ def build_dashboard_data(rows):
             "missing_post": (max(0, expected_by_label[prov] - len(post_p))
                              if prov in expected_by_label else None),
             # PMS / ODMS / HC breakdown, shown when a province row is expanded
-            "levels": levels_for(prov, pre_p, post_p),
+            # NGO/partner is a single group, not a province with PMS/OD/HC
+            # underneath it, so it has nothing to expand into.
+            "levels": [] if prov == NGO_BUCKET_KH else levels_for(prov, pre_p, post_p),
         })
 
     # roll-up, over the provinces that actually have a figure

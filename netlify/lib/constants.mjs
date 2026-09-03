@@ -229,6 +229,10 @@ export const PROVINCE_EN = {
   "other": "Other"
 };
 
+export const NGO_BUCKET_KH = "NGO / ដៃគូ";
+
+export const NGO_BUCKET_EN = "NGO / Partner";
+
 export const EXPECTED_BY_PROVINCE = {
   "prov_1": 20,
   "prov_2": 20,

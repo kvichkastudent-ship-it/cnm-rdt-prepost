@@ -363,8 +363,8 @@ tfoot .tot,#tracking-tbody tr.tot td{font-weight:800;background:#f4f7fc;}
 
 
   <section class="kpi-row">
-    <div class="kpi-card k-pre"><div class="kpi-label">ចំនួនអ្នកឆ្លើយ Pre-Test<span class="en-label">Pre-Test Submissions</span></div><div class="kpi-value" id="kpi-n-pre">0</div><div class="kpi-change" id="kpi-n-pre-sub"></div></div>
-    <div class="kpi-card k-post"><div class="kpi-label">ចំនួនអ្នកឆ្លើយ Post-Test<span class="en-label">Post-Test Submissions</span></div><div class="kpi-value" id="kpi-n-post">0</div><div class="kpi-change" id="kpi-n-post-sub"></div></div>
+    <div class="kpi-card k-pre"><div class="kpi-label">ចំនួនអ្នកឆ្លើយ Pre-Test<span class="en-label">Pre-Test Submissions</span></div><div class="kpi-value" id="kpi-n-pre">0</div></div>
+    <div class="kpi-card k-post"><div class="kpi-label">ចំនួនអ្នកឆ្លើយ Post-Test<span class="en-label">Post-Test Submissions</span></div><div class="kpi-value" id="kpi-n-post">0</div></div>
     <div class="kpi-card k-pre"><div class="kpi-label">ពិន្ទុមធ្យម Pre-Test<span class="en-label">Avg Pre Score</span></div><div class="kpi-value" id="kpi-pre">0%</div></div>
     <div class="kpi-card k-post"><div class="kpi-label">ពិន្ទុមធ្យម Post-Test<span class="en-label">Avg Post Score</span></div><div class="kpi-value" id="kpi-post">0%</div></div>
     <div class="kpi-card k-change"><div class="kpi-label">ការផ្លាស់ប្ដូរជាមធ្យម<span class="en-label">Avg Change</span></div><div class="kpi-value" id="kpi-improve">0 pts</div><div class="kpi-change positive" id="kpi-improve-pct"></div></div>
@@ -421,7 +421,7 @@ tfoot .tot,#tracking-tbody tr.tot td{font-weight:800;background:#f4f7fc;}
   </section>
   <section class="chart-row">
     <div class="chart-container chart-full">
-      <h3>ពិន្ទុតាមតួនាទី (PMS / ODMS / HC)<span class="en-title">Score by Position</span></h3>
+      <h3>ពិន្ទុតាមតួនាទី (PMS / ODMS / HC / NGO)<span class="en-title">Score by Position</span></h3>
       <canvas id="chart-position"></canvas>
     </div>
   </section>
@@ -551,18 +551,6 @@ function renderTracking(d){
   const DASH = '—';
   const rows = d.by_province || [];
 
-  // KPI sub-lines only mean something once there is a denominator
-  const line = (id, phase) => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    if(!t){ el.textContent = ''; el.className = 'kpi-change'; return; }
-    el.textContent = 'ក្នុង ' + t.expected_total + ' · ' + phase.rate_pct.toFixed(0)
-                   + '% · ' + phase.missing + ' ខ្វះ / missing';
-    el.className = 'kpi-change ' + (phase.missing === 0 ? 'positive' : 'negative');
-  };
-  line('kpi-n-pre-sub', t && t.pre);
-  line('kpi-n-post-sub', t && t.post);
-
   // The table is worth showing regardless: without roster figures it still
   // answers "how many came in from each province, pre and post" - which is how
   // you spot a province sitting at zero post-tests. The Expected and Missing
@@ -581,10 +569,17 @@ function renderTracking(d){
 
   const tb = document.getElementById('tracking-tbody');
   if(tb){
+    // Rows with a roster figure add up to TOTAL. Anything without one - NGO /
+    // partner staff, or a province nobody budgeted for - is real attendance but
+    // is not part of the 131, so it sits BELOW the total line. Otherwise the
+    // column would not add up to the total printed under it.
+    const counted = rows.filter(r => r.expected !== null && r.expected !== undefined);
+    const extra   = rows.filter(r => r.expected === null || r.expected === undefined);
+
     let out = '';
-    rows.forEach((r, i) => {
+    const rowHtml = (r, i) => {
       const levels = r.levels || [];
-      out += '<tr class="prov" data-i="' + i + '"' + (levels.length ? '' : ' style="cursor:default"') + '>'
+      let out = '<tr class="prov" data-i="' + i + '"' + (levels.length ? '' : ' style="cursor:default"') + '>'
            + '<td>' + (levels.length ? '<span class="caret"></span>' : '')
            + '<strong>' + r.province + '</strong>'
            + (r.province_en ? '<span class="en-label">' + r.province_en + '</span>' : '')
@@ -599,13 +594,17 @@ function renderTracking(d){
              + '<td>' + L.n_pre + '</td>' + cell(L.missing_pre)
              + '<td>' + L.n_post + '</td>' + cell(L.missing_post) + '</tr>';
       });
-    });
+      return out;
+    };
+
+    counted.forEach((r, i) => { out += rowHtml(r, i); });
     out += '<tr class="tot"><td><strong>TOTAL</strong></td>'
          + '<td>' + (t ? t.expected_total : DASH) + '</td>'
-         + '<td>' + rows.reduce((a, r) => a + r.n_pre, 0) + '</td>'
+         + '<td>' + counted.reduce((a, r) => a + r.n_pre, 0) + '</td>'
          + cell(t ? t.pre.missing : null)
-         + '<td>' + rows.reduce((a, r) => a + r.n_post, 0) + '</td>'
+         + '<td>' + counted.reduce((a, r) => a + r.n_post, 0) + '</td>'
          + cell(t ? t.post.missing : null) + '</tr>';
+    extra.forEach((r, i) => { out += rowHtml(r, counted.length + i); });
     tb.innerHTML = out;
 
     // click a province to show or hide its PMS / ODMS / HC rows
@@ -626,15 +625,20 @@ function renderTracking(d){
   const parts = [];
   if(!t){
     parts.push('<b>Expected and Missing are empty because no roster figures are set.</b> '
-             + 'Fill in EXPECTED_BY_PROVINCE near the top of fetch_rdt_results.py '
-             + '(one headcount per province) and re-run, and those two columns plus the '
-             + 'submission rate on the KPI cards fill in automatically.');
+             + 'Fill in EXPECTED_BY_PROVINCE_POSITION near the top of fetch_rdt_results.py '
+             + '(one headcount per province per level) and re-run, and those two columns '
+             + 'fill in automatically.');
   } else if(t.provinces_configured < t.provinces_total){
     parts.push('Only ' + t.provinces_configured + ' of ' + t.provinces_total
              + ' provinces have a roster figure set, so Expected and Missing totals cover those provinces only.');
   }
   parts.push('Counts submissions, not people — the form has no name or ID field, '
            + 'so this shows HOW MANY are missing, not which individuals.');
+  if(rows.some(r => r.expected === null || r.expected === undefined)){
+    parts.push('Rows below the TOTAL line are outside the roster of '
+             + (t ? t.expected_total : '—') + ', so their submissions are listed '
+             + 'but not counted towards it.');
+  }
   note.innerHTML = '<span class="en-label">' + parts.join(' ') + '</span>';
 }
 
@@ -652,7 +656,10 @@ function renderKPIs(d){
 
 function renderPositionPassTable(rows){
   const tbody = document.getElementById('position-pass-tbody');
-  tbody.innerHTML = rows.map(r => '<tr><td><strong>' + r.position + '</strong></td><td>' + r.n_pre + '</td><td>' + r.n_post + '</td><td>' + r.pass_pre_pct.toFixed(1) + '%</td><td>' + r.pass_post_pct.toFixed(1) + '%</td></tr>').join('');
+  // A group with no submissions has no pass rate. Printing 0.0% would read as
+  // "nobody passed" rather than "nobody sat it".
+  const rate = (pct, n) => n ? pct.toFixed(1) + '%' : '—';
+  tbody.innerHTML = rows.map(r => '<tr><td><strong>' + r.position + '</strong></td><td>' + r.n_pre + '</td><td>' + r.n_post + '</td><td>' + rate(r.pass_pre_pct, r.n_pre) + '</td><td>' + rate(r.pass_post_pct, r.n_post) + '</td></tr>').join('');
 }
 
 function renderDetailTable(rows){
@@ -849,8 +856,8 @@ function renderPositionChart(rows){
   charts.p = new Chart(ctx, {
     type:'bar',
     data:{ labels: rows.map(r=>r.position + ' (pre n=' + r.n_pre + ', post n=' + r.n_post + ')'), datasets:[
-      {label:'Pre-Test', data: rows.map(r=>r.pre_pct), backgroundColor: COLORS.pre, borderRadius:4},
-      {label:'Post-Test', data: rows.map(r=>r.post_pct), backgroundColor: COLORS.post, borderRadius:4},
+      {label:'Pre-Test', data: rows.map(r=>r.n_pre ? r.pre_pct : null), backgroundColor: COLORS.pre, borderRadius:4},
+      {label:'Post-Test', data: rows.map(r=>r.n_post ? r.post_pct : null), backgroundColor: COLORS.post, borderRadius:4},
     ]},
     plugins: [ChartDataLabels],
     options:{ categoryPercentage:0.74, barPercentage:0.86,
