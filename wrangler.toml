@@ -1,0 +1,22 @@
+# Cloudflare Workers deployment (the "Create an app" / `npx wrangler deploy` flow).
+#
+# Two things get published together:
+#   [assets]  public/  - the dashboard page, served straight from the edge
+#   main      worker.js - answers /api/data, the one request that needs a secret
+#
+# Assets win when a path matches a file, so only /api/data ever reaches the
+# Worker. There is no build step: public/index.html is generated locally by
+# build_site.py and committed.
+#
+# The three Kobo variables are NOT here on purpose - a token in a committed file
+# is a leaked token. Set them in the dashboard under
+# Settings -> Variables and Secrets, with the token as a Secret.
+#
+# Cloudflare Pages (functions/api/data.js) still works too; see CLOUDFLARE.md.
+
+name = "cnm-rdt-prepost"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[assets]
+directory = "./public"
