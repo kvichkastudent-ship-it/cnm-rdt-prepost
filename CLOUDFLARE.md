@@ -1,8 +1,11 @@
-# Publishing the live dashboard on Cloudflare Pages
+# Publishing the live dashboard on Cloudflare
 
 The live dashboard is a static page plus one small server function. The page is
-`public/index.html`; the function is `functions/api/data.js`, which answers
-`/api/data` by fetching Kobo, scoring the submissions and returning JSON.
+`public/index.html`; the function answers `/api/data` by fetching Kobo, scoring
+the submissions and returning JSON.
+
+Cloudflare offers two ways in, and the dashboard supports both. **Workers** is
+what the current "Create an app" screen gives you, and the one to use.
 
 **Why the function exists:** the Kobo API token must never be in the page. Anyone
 who opens the dashboard can read its source, and that token can read *and delete*
@@ -14,32 +17,38 @@ the same repository.
 
 ---
 
-## One-time setup
+## One-time setup (Workers)
 
-### 1. Create the project
+### 1. Create the app
 
 1. Sign up (free) at <https://dash.cloudflare.com>.
-2. **Compute (Workers) → Workers & Pages → Create → Pages → Connect to Git**.
+2. **Compute (Workers) → Create → Import a repository**.
 3. Authorise GitHub, choose **`kvichkastudent-ship-it/cnm-rdt-prepost`**.
 
-### 2. Build settings
+### 2. Settings on the "Set up your application" screen
 
-There is no build step — `public/index.html` is generated locally and committed,
-so Cloudflare only publishes it and bundles the function.
-
-| Setting | Value |
+| Field | Value |
 |---|---|
-| Production branch | `main` |
-| Framework preset | **None** |
+| Project name | `cnm-rdt-prepost` |
 | Build command | **leave empty** |
-| Build output directory | **`public`** |
+| Deploy command | `npx wrangler deploy` (the default) |
 
-Do **not** point the output directory at the repository root. It would publish
-the XLSForm, the scoring script and this documentation to a public URL.
+There is no build step, and there is no "output directory" field to fill in.
+Both live in `wrangler.toml` in the repository:
 
-You do not need to configure the function. Cloudflare finds `functions/` in the
-repository root on its own, and the folder path becomes the URL:
-`functions/api/data.js` → `/api/data`.
+```toml
+name = "cnm-rdt-prepost"
+main = "worker.js"          # answers /api/data
+[assets]
+directory = "./public"      # the dashboard page
+```
+
+Assets win whenever a path matches a file, so `/api/data` is the only request
+that ever reaches the Worker. `public/index.html` is generated locally by
+`build_site.py` and committed, so Cloudflare has nothing to build.
+
+**Protect with Cloudflare Access** on that screen is worth considering — see
+*Before sharing the link* below.
 
 ### 3. Environment variables
 
@@ -63,10 +72,11 @@ add them under Preview as well.
 
 ### 4. Deploy
 
-**Save and Deploy.** The site appears at `https://<project-name>.pages.dev`.
+**Deploy.** The site appears at
+`https://cnm-rdt-prepost.<your-subdomain>.workers.dev`.
 
 Environment variables only take effect on a *new* deploy. If you add them after
-the first deploy, go to **Deployments → … → Retry deployment**.
+the first deploy, redeploy from **Deployments**.
 
 ---
 
@@ -84,14 +94,15 @@ the first deploy, go to **Deployments → … → Retry deployment**.
 
 ## Before sharing the link
 
-A `.pages.dev` URL is **public to anyone who has it** — unlisted, not private.
+The URL is **public to anyone who has it** — unlisted, not private.
 The dashboard's Raw CSV button exports every submission: province, OD, health
 centre, position, every answer and the score. There are no names, but in a small
 health centre those columns could narrow to one person.
 
 Fine to share inside CNM. Think before posting it anywhere wider. If you need it
-genuinely restricted, **Settings → General → Access policy** puts Cloudflare
-Access in front of the whole site, so only email addresses you list can open it.
+genuinely restricted, turn on **Protect with Cloudflare Access** (offered when
+you create the app, or later in the project's settings). It puts a sign-in in
+front of the whole site, so only the email addresses you list can open it.
 
 ---
 
@@ -104,4 +115,24 @@ Access in front of the whole site, so only email addresses you list can open it.
 | `Kobo returned 401` | Token rejected. Regenerate it in Kobo (Account Settings → Security) and update `KOBO_API_TOKEN`. |
 | `Kobo returned 404` | Wrong `KOBO_ASSET_UID`, or `KOBO_SERVER` pointing at the wrong Kobo server. |
 | Old layout after a push | `public/index.html` was not rebuilt. Run `python build_site.py`, commit, push. |
+| `wrangler.toml not found` | The deploy ran against a commit from before it existed. Push first, then redeploy. |
 | Charts fine, numbers stale by under a minute | The 60-second edge cache. Expected. |
+
+---
+
+## The Pages route (alternative)
+
+If you use **Workers & Pages → Pages → Connect to Git** instead, Cloudflare
+ignores `wrangler.toml` and wants the settings in its own form:
+
+| Setting | Value |
+|---|---|
+| Production branch | `main` |
+| Framework preset | None |
+| Build command | leave empty |
+| Build output directory | `public` |
+
+Pages finds `functions/` in the repository root on its own, and the folder path
+becomes the URL: `functions/api/data.js` → `/api/data`. Environment variables
+work the same way. Do **not** point the output directory at the repository root;
+that would publish the XLSForm and the scoring script.
