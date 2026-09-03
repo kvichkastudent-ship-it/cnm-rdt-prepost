@@ -32,3 +32,6 @@ desktop.ini
 _parity.html
 _livetest.html
 .claude/launch.json
+
+# wrangler local state: caches the Cloudflare account id and account email
+.wrangler/
