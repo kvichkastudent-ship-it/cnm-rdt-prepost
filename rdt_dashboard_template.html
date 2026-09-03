@@ -216,8 +216,6 @@ h3 .en-title{font-size:11.5px;color:var(--text-secondary);font-weight:500;displa
 #tracking-tbody tr.lvl .lvl-name{font-weight:700;color:var(--text-primary);}
 #tracking-tbody tr.lvl .lvl-note{font-weight:400;color:var(--text-secondary);}
 .expand-hint{font-size:11.5px;color:var(--text-secondary);margin-top:2px;}
-/* the all-submissions line: same weight as TOTAL, set apart by a rule above */
-#tracking-tbody tr.grand td{border-top:2px solid #dbe3f0;}
 #tracking-tbody tr.tot .en-label{font-weight:500;}
 .miss.zero{color:#178a4c;}
 tfoot .tot,#tracking-tbody tr.tot td{font-weight:800;background:#f4f7fc;}
@@ -553,30 +551,21 @@ function renderTracking(d){
     };
 
     counted.forEach((r, i) => { out += rowHtml(r, i); });
-    // TOTAL is the roster arithmetic and nothing else: expected minus received
-    // equals missing, every time. Saying so on the row stops it reading as a
-    // contradiction of the count on the KPI card above.
-    out += '<tr class="tot"><td><strong>TOTAL</strong>'
-         + '<span class="en-label">ខេត្តគោលដៅប៉ុណ្ណោះ / Roster provinces only</span></td>'
-         + '<td>' + (t ? t.expected_total : DASH) + '</td>'
-         + '<td>' + counted.reduce((a, r) => a + r.n_pre, 0) + '</td>'
-         + cell(t ? t.pre.missing : null)
-         + '<td>' + counted.reduce((a, r) => a + r.n_post, 0) + '</td>'
-         + cell(t ? t.post.missing : null) + '</tr>';
     extra.forEach((r, i) => { out += rowHtml(r, counted.length + i); });
 
-    // Everything received, roster or not. This is the figure on the KPI cards,
-    // and without it the two look like they disagree. Only worth a row when
-    // there is something outside the roster to add.
-    if(extra.length){
-      out += '<tr class="tot grand"><td><strong>សរុបទាំងអស់</strong>'
-           + '<span class="en-label">All submissions received</span></td>'
-           + '<td>' + DASH + '</td>'
-           + '<td>' + rows.reduce((a, r) => a + r.n_pre, 0) + '</td>'
-           + '<td>' + DASH + '</td>'
-           + '<td>' + rows.reduce((a, r) => a + r.n_post, 0) + '</td>'
-           + '<td>' + DASH + '</td></tr>';
-    }
+    // One total line, and it counts everything received - which is the figure
+    // on the KPI card above, so the two can no longer look like they disagree.
+    // Expected and Missing are dashes here on purpose: NGO/partner staff and
+    // anyone who picked "Other" are not on the roster of '+ (t ? t.expected_total : '?') + ',
+    // so there is no headcount to measure them against. The per-province rows
+    // still carry those figures, and the note below gives the roster summary.
+    out += '<tr class="tot"><td><strong>សរុបទាំងអស់</strong>'
+         + '<span class="en-label">All submissions received</span></td>'
+         + '<td>' + DASH + '</td>'
+         + '<td>' + rows.reduce((a, r) => a + r.n_pre, 0) + '</td>'
+         + '<td>' + DASH + '</td>'
+         + '<td>' + rows.reduce((a, r) => a + r.n_post, 0) + '</td>'
+         + '<td>' + DASH + '</td></tr>';
     tb.innerHTML = out;
 
     // click a province to show or hide its PMS / ODMS / HC rows
@@ -604,12 +593,20 @@ function renderTracking(d){
     parts.push('Only ' + t.provinces_configured + ' of ' + t.provinces_total
              + ' provinces have a roster figure set, so Expected and Missing totals cover those provinces only.');
   }
+  if(t){
+    parts.push('<b>Roster: ' + t.pre.submitted + ' of ' + t.expected_total
+             + ' pre-tests received, ' + t.pre.missing + ' still missing'
+             + (t.post.submitted || t.post.missing < t.expected_total
+                ? '; ' + t.post.submitted + ' post-tests received, ' + t.post.missing + ' still missing'
+                : '')
+             + '.</b> The province rows above show where.');
+  }
   parts.push('Counts submissions, not people — the form has no name or ID field, '
            + 'so this shows HOW MANY are missing, not which individuals.');
   if(rows.some(r => r.expected === null || r.expected === undefined)){
-    parts.push('Rows below the TOTAL line are outside the roster of '
-             + (t ? t.expected_total : '—') + ', so their submissions are listed '
-             + 'but not counted towards it.');
+    parts.push('Rows with a dash under Expected are outside that roster — NGO and '
+             + 'partner staff, and anyone who chose “Other” — so they are counted in '
+             + 'the total received but not measured against it.');
   }
   note.innerHTML = '<span class="en-label">' + parts.join(' ') + '</span>';
 }
