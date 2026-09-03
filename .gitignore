@@ -31,3 +31,4 @@ desktop.ini
 # local test artefacts
 _parity.html
 _livetest.html
+.claude/launch.json

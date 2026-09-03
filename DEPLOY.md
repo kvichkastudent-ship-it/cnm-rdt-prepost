@@ -11,30 +11,32 @@ Two separate things get deployed, **in this order**:
 
 | File | Role |
 |---|---|
-| `CNM_RDT_PrePostTest_KoboXLSForm_v3.xlsx` | **The form to deploy.** Current version. |
+| `CNM_RDT_PrePostTest_KoboXLSForm_v5.xlsx` | **The form to deploy.** Current version. |
 | `fetch_rdt_results.py` | Pulls submissions from Kobo, scores them, builds the dashboard. |
 | `rdt_dashboard_template.html` | Layout the script injects data into. **Must sit in the same folder.** |
 | `verify_form_sync.py` | Guard: fails if the form and the script disagree. |
 | `CNM_RDT_Dashboard_SAMPLE.html` | Preview built from fake data. Not for circulation. |
-| `CNM_RDT_PrePostTest_KoboXLSForm_KhmerFixed.xlsx` | **Superseded by v3.** Keep for reference; do not deploy. |
+| `..._v3.xlsx`, `..._v4.xlsx`, `..._KhmerFixed.xlsx` | **Superseded by v5.** Keep for reference; do not deploy. |
 
 ---
 
 ## Step 1 — Deploy the form to Kobo
 
-Upload v3 as a **new version of the existing project**, not a new project — a new
+Upload v5 as a **new version of the existing project**, not a new project — a new
 project loses the collected submissions and changes the asset UID.
 
 In Kobo: open the project → **Settings → Media / Replace form** (or
-**Form → Replace form**) → upload `CNM_RDT_PrePostTest_KoboXLSForm_v3.xlsx` → **Deploy**.
+**Form → Replace form**) → upload `CNM_RDT_PrePostTest_KoboXLSForm_v5.xlsx` → **Deploy**.
 
 Safe to redeploy over live data:
 
 - Stored answers are the choice *names* (`a`/`b`/`c`/`d`), not the label text, so the
   Khmer corrections do not affect scoring or anything already collected.
-- v3 only **adds** questions (`position_other`, `province_other`, `od_other`,
-  `hc_other`). Submissions collected before the redeploy simply have those fields
-  empty; the script reads a missing field as blank and carries on.
+- v5 only **adds** questions (`position_other`, `province_other`, `od_other`,
+  `hc_other`, `org_name`) and **skips** ones that never applied — NGO/Partner staff
+  are no longer asked for a province, and PMS are no longer asked for an OD.
+  Submissions collected before the redeploy simply have those fields empty; the
+  script reads a missing field as blank and carries on.
 
 ---
 
@@ -65,17 +67,19 @@ $env:KOBO_ASSET_UID = "aXXXXXXXXXXXXXXXXXXXXXX"
 Check the form and script still agree, then build:
 
 ```
-python verify_form_sync.py CNM_RDT_PrePostTest_KoboXLSForm_v3.xlsx
+python verify_form_sync.py CNM_RDT_PrePostTest_KoboXLSForm_v5.xlsx
 python fetch_rdt_results.py
 ```
 
 Output: `CNM_RDT_Dashboard.html` + `CNM_RDT_Results.csv`.
 Re-run whenever you want refreshed numbers.
 
-**Optional, before building:** fill in `EXPECTED_BY_PROVINCE` near the top of
-`fetch_rdt_results.py` with the expected headcount per province. That switches on
-the Expected/Missing columns in the Submission Tracking table and the
-submission-rate line on the two count cards. Left as `None`, those show `—`.
+**Expected headcounts** live in `EXPECTED_BY_PROVINCE_POSITION` near the top of
+`fetch_rdt_results.py` — one figure per province per level (PMS / ODMS / HC),
+currently totalling 131. Province and overall totals are derived from it, so edit
+that one table and nothing else. It drives the Expected/Missing columns in the
+Submission Tracking table, the per-province PMS/OD/HC breakdown, and the
+submission-rate line on the two count cards.
 
 The API token never reaches the generated HTML — it stays in your shell session.
 
