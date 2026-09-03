@@ -191,6 +191,7 @@ export const POSITION_LABELS = {
   "pms": "PMS",
   "odms": "ODMS",
   "hc": "HC",
+  "ngo": "NGO/Partner",
   "other": "Other"
 };
 

@@ -58,12 +58,17 @@ export function scoreSubmission(sub) {
   const row = {
     test_type: (rawType in TESTTYPE_LABELS) ? TESTTYPE_LABELS[rawType] : rawType,
     position: (rawPos in POSITION_LABELS) ? POSITION_LABELS[rawPos] : (rawPos || "Unknown"),
-    province: (rawProv in PROVINCE_LABELS) ? PROVINCE_LABELS[rawProv] : (rawProv || "Unknown"),
-    province_en: (rawProv in PROVINCE_EN) ? PROVINCE_EN[rawProv] : "",
+    // NGO/partner staff are never asked for a province; give them their own
+    // bucket rather than one called "Unknown".
+    province: (rawPos === "ngo" && !rawProv) ? "NGO / ដៃគូ"
+              : (rawProv in PROVINCE_LABELS) ? PROVINCE_LABELS[rawProv] : (rawProv || "Unknown"),
+    province_en: (rawPos === "ngo" && !rawProv) ? "NGO / Partner"
+                 : (rawProv in PROVINCE_EN) ? PROVINCE_EN[rawProv] : "",
     od: getField(sub, "od"),
     hc: getField(sub, "hc"),
     date: getField(sub, "test_date"),
     position_other: getField(sub, "position_other"),
+    org_name: getField(sub, "org_name"),
     province_other: getField(sub, "province_other"),
     od_other: getField(sub, "od_other"),
     hc_other: getField(sub, "hc_other"),

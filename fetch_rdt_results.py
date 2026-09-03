@@ -118,11 +118,17 @@ QUESTION_LABELS = {
 # 15 equally-weighted questions means exactly 12 correct.
 PASS_THRESHOLD = 80.0
 
-POSITION_LABELS = {"pms": "PMS", "odms": "ODMS", "hc": "HC", "other": "Other"}
+POSITION_LABELS = {"pms": "PMS", "odms": "ODMS", "hc": "HC",
+                   # NGO/partner staff sit outside the provincial structure, so the
+                   # form skips province/OD/HC for them and asks org_name instead
+                   "ngo": "NGO/Partner", "other": "Other"}
 
 # Province choice names -> labels, taken verbatim from the XLSForm `choices` sheet.
 # PROVINCE_ORDER is the roster order the training used, not alphabetical - the
 # by-province chart follows it so the bars stay in a familiar sequence.
+NGO_BUCKET_KH = "NGO / ដៃគូ"
+NGO_BUCKET_EN = "NGO / Partner"
+
 PROVINCE_ORDER = ["prov_1", "prov_2", "prov_3", "prov_4", "prov_5", "prov_6"]
 PROVINCE_LABELS = {
     "prov_1": "ស្ទឹងត្រែង",
@@ -244,13 +250,20 @@ def score_submission(sub):
     row = {
         "test_type": TESTTYPE_LABELS.get(get_field(sub, "test_type"), get_field(sub, "test_type")),
         "position": POSITION_LABELS.get(get_field(sub, "position"), get_field(sub, "position") or "Unknown"),
-        "province": PROVINCE_LABELS.get(get_field(sub, "province"), get_field(sub, "province") or "Unknown"),
-        "province_en": PROVINCE_EN.get(get_field(sub, "province"), ""),
+        # NGO/partner staff are never asked for a province, so they would otherwise
+        # land in a bucket called "Unknown" - which reads like missing data rather
+        # than a group that legitimately has no province. Give them their own.
+        "province": (NGO_BUCKET_KH if get_field(sub, "position") == "ngo" and not get_field(sub, "province")
+                     else PROVINCE_LABELS.get(get_field(sub, "province"),
+                                              get_field(sub, "province") or "Unknown")),
+        "province_en": (NGO_BUCKET_EN if get_field(sub, "position") == "ngo" and not get_field(sub, "province")
+                        else PROVINCE_EN.get(get_field(sub, "province"), "")),
         "od": get_field(sub, "od"),
         "hc": get_field(sub, "hc"),
         "date": get_field(sub, "test_date"),
         # free text captured when "other (specify)" was chosen
         "position_other": get_field(sub, "position_other"),
+        "org_name": get_field(sub, "org_name"),
         "province_other": get_field(sub, "province_other"),
         "od_other": get_field(sub, "od_other"),
         "hc_other": get_field(sub, "hc_other"),
@@ -490,7 +503,7 @@ def generate_sample_rows():
                 "province": PROVINCE_LABELS[prov_code],
                 "province_en": PROVINCE_EN[prov_code],
                 "od": None, "hc": None, "date": "2026-09-03",
-                "position_other": None, "province_other": None,
+                "position_other": None, "org_name": None, "province_other": None,
                 "od_other": None, "hc_other": None,
             }
             total = 0
