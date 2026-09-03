@@ -8,9 +8,12 @@
 # Worker. There is no build step: public/index.html is generated locally by
 # build_site.py and committed.
 #
-# The three Kobo variables are NOT here on purpose - a token in a committed file
-# is a leaked token. Set them in the dashboard under
-# Settings -> Variables and Secrets, with the token as a Secret.
+# KOBO_SERVER and KOBO_ASSET_UID are plain identifiers and live in [vars] below.
+# The TOKEN is not here and never will be: a token in a committed file is a
+# leaked token. Set it once with
+#     npx wrangler secret put KOBO_API_TOKEN
+# which prompts for the value and stores it encrypted on Cloudflare, or add it
+# in the dashboard under Settings -> Variables and Secrets as a Secret.
 #
 # Cloudflare Pages (functions/api/data.js) still works too; see CLOUDFLARE.md.
 
@@ -20,3 +23,10 @@ compatibility_date = "2025-01-01"
 
 [assets]
 directory = "./public"
+
+[vars]
+# Not secrets - an identifier and a hostname. The token is set separately.
+# Use eu.kobotoolbox.org or kf.kobotoolbox.org to match your own Kobo login;
+# a token issued by one returns nothing on the other, and it fails quietly.
+KOBO_SERVER = "https://eu.kobotoolbox.org"
+KOBO_ASSET_UID = "aRAkKsGrthphw4Nqd7egNY"

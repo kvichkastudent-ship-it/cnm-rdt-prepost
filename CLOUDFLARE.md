@@ -17,6 +17,42 @@ the same repository.
 
 ---
 
+## Deploying from your own machine (simplest)
+
+Three commands, run in this folder. No Git connection to configure, and nothing
+in a web form to get wrong.
+
+```
+npx wrangler login
+npx wrangler deploy
+npx wrangler secret put KOBO_API_TOKEN
+```
+
+1. **login** opens a browser; click Allow. Once only.
+2. **deploy** uploads `public/` and `worker.js` and prints the URL.
+3. **secret put** prompts for the Kobo token and stores it encrypted on
+   Cloudflare. It is never typed on a command line, so it does not end up in
+   your shell history. It takes effect immediately - no redeploy needed.
+
+`KOBO_SERVER` and `KOBO_ASSET_UID` are already in `wrangler.toml`; only the
+token is set this way.
+
+To publish a change later, run `npx wrangler deploy` again. Note this deploys
+whatever is in your folder right now, so `git pull` first if the change came
+from somewhere else, and run `python build_site.py` if you edited the template.
+
+**The data does not need redeploying.** The Worker reads Kobo on every request,
+so new submissions appear on reload regardless of when you last deployed.
+
+To check it worked: open the URL, then open `<url>/api/data` - it returns JSON,
+or names exactly what is wrong.
+
+---
+
+## Connecting it to GitHub instead (automatic deploys)
+
+Worth doing only if you want a push to `main` to publish by itself.
+
 ## One-time setup (Workers)
 
 ### 1. Create the app
