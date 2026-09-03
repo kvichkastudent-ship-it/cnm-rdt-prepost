@@ -26,7 +26,9 @@ directory = "./public"
 
 [vars]
 # Not secrets - an identifier and a hostname. The token is set separately.
-# Use eu.kobotoolbox.org or kf.kobotoolbox.org to match your own Kobo login;
-# a token issued by one returns nothing on the other, and it fails quietly.
-KOBO_SERVER = "https://eu.kobotoolbox.org"
+# Confirmed by /api/data?diag=1 on 2026-09-03: the token and the form both live
+# on kf. The eu server answers "Invalid token" for the same token, and a wrong
+# server here fails with a blank 400 that names no cause - so do not change this
+# without re-running that check.
+KOBO_SERVER = "https://kf.kobotoolbox.org"
 KOBO_ASSET_UID = "aRAkKsGrthphw4Nqd7egNY"

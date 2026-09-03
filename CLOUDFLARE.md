@@ -93,15 +93,16 @@ that ever reaches the Worker. `public/index.html` is generated locally by
 | Name | Value | Type |
 |---|---|---|
 | `KOBO_API_TOKEN` | your Kobo API token | **Secret** |
-| `KOBO_SERVER` | `https://eu.kobotoolbox.org` | Text |
+| `KOBO_SERVER` | `https://kf.kobotoolbox.org` | Text |
 | `KOBO_ASSET_UID` | `aRAkKsGrthphw4Nqd7egNY` | Text |
 
 Choose **Secret** for the token so it is hidden after saving.
 
-Check `KOBO_SERVER` against your own browser: use `eu.kobotoolbox.org` if that is
-what your Kobo address bar says, `kf.kobotoolbox.org` if it says that instead. A
-token issued by one server returns nothing on the other, and it fails quietly —
-the dashboard just looks empty.
+This project is on **kf**, confirmed with `/api/data?diag=1`. A token issued by
+one Kobo server is rejected by the other, and the failure is a blank 400 that
+names no cause — so if you ever move servers, re-run that check rather than
+guessing. Opening `<your-site>/api/data?diag=1` asks both servers and prints
+which one recognises the token, without disclosing the token itself.
 
 Add these under **Production**. If you also want preview deployments to work,
 add them under Preview as well.

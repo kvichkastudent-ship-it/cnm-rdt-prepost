@@ -31,17 +31,17 @@ SETUP
    KoboToolbox -> profile icon -> ACCOUNT SETTINGS -> Security -> API Key
 
 3. Asset UID from the form URL, e.g.
-   https://eu.kobotoolbox.org/#/forms/aXXXXXXXXXXXXXXXXXXXXXX/summary
+   https://kf.kobotoolbox.org/#/forms/aXXXXXXXXXXXXXXXXXXXXXX/summary
 
 4. Set environment variables.
 
    Windows PowerShell (per session):
-       $env:KOBO_SERVER    = "https://eu.kobotoolbox.org"
+       $env:KOBO_SERVER    = "https://kf.kobotoolbox.org"
        $env:KOBO_API_TOKEN = "your_token_here"
        $env:KOBO_ASSET_UID = "aRAkKsGrthphw4Nqd7egNY"
 
    macOS / Linux:
-       export KOBO_SERVER="https://eu.kobotoolbox.org"
+       export KOBO_SERVER="https://kf.kobotoolbox.org"
        export KOBO_API_TOKEN="your_token_here"
        export KOBO_ASSET_UID="aRAkKsGrthphw4Nqd7egNY"
 

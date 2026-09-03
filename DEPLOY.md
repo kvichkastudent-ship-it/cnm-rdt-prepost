@@ -62,7 +62,7 @@ Open PowerShell **in this folder** (the template path is relative — running fr
 elsewhere fails), then set the three variables. They last for that session only:
 
 ```
-$env:KOBO_SERVER    = "https://eu.kobotoolbox.org"
+$env:KOBO_SERVER    = "https://kf.kobotoolbox.org"
 $env:KOBO_API_TOKEN = "your_token_here"
 $env:KOBO_ASSET_UID = "aXXXXXXXXXXXXXXXXXXXXXX"
 ```
