@@ -2,7 +2,7 @@
 """
 gen_js_constants.py
 ===================
-Generates netlify/lib/constants.mjs from fetch_rdt_results.py.
+Generates lib/constants.mjs from fetch_rdt_results.py.
 
 WHY THIS EXISTS
 ---------------
@@ -29,7 +29,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "fetch_rdt_results.py")
-OUT = os.path.join(HERE, "netlify", "lib", "constants.mjs")
+OUT = os.path.join(HERE, "lib", "constants.mjs")
 
 
 def load(path):

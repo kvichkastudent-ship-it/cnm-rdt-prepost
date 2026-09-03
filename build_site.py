@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-build_netlify_site.py
-=====================
-Generates netlify_public/index.html from rdt_dashboard_template.html.
+build_site.py
+=============
+Generates public/index.html from rdt_dashboard_template.html.
 
 WHY THIS EXISTS
 ---------------
@@ -14,12 +14,12 @@ from the same template the Python script uses.
 The only difference between the two outputs is where the data comes from:
 
   static build   the payload is injected into the page at build time
-  live build     the page fetches /api/data on load, and the Netlify function
-                 does the scoring server-side with the Kobo token
+  live build     the page fetches /api/data on load, and the hosting provider's
+                 function does the scoring server-side with the Kobo token
 
 Run this after ANY change to rdt_dashboard_template.html:
 
-    python build_netlify_site.py
+    python build_site.py
 """
 
 import io
@@ -29,15 +29,16 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE = os.path.join(HERE, "rdt_dashboard_template.html")
-OUTDIR = os.path.join(HERE, "netlify_public")
+OUTDIR = os.path.join(HERE, "public")
 OUT = os.path.join(OUTDIR, "index.html")
 
 LOADER = """
 // ---------------------------------------------------------------------------
 // LIVE BUILD. The static build has its payload injected here at build time; this
-// one asks the Netlify function, which holds the Kobo token server-side and does
-// the scoring with the same logic. Reloading the page therefore shows current
-// submissions.
+// one asks /api/data, which holds the Kobo token server-side and does the
+// scoring with the same logic. Reloading the page therefore shows current
+// submissions. The same file works on Cloudflare Pages and on Netlify - the
+// page does not care which one is answering.
 // ---------------------------------------------------------------------------
 let DASHBOARD_DATA = null;
 let RAW_CSV = null;
@@ -118,7 +119,7 @@ def main():
     os.makedirs(OUTDIR, exist_ok=True)
     io.open(OUT, "w", encoding="utf-8", newline="").write(html)
     print("wrote %s  (%d chars)" % (os.path.relpath(OUT, HERE), len(html)))
-    print("  data source : /api/data (Netlify function)")
+    print("  data source : /api/data (Cloudflare Pages or Netlify function)")
     print("  charts      : identical to the static build, same template")
 
 

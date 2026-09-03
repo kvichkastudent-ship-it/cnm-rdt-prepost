@@ -1,0 +1,5 @@
+# Cloudflare Pages reads this file; Netlify gets the same headers from
+# netlify.toml. Keep the two in step.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer

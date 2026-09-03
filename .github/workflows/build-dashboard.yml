@@ -1,13 +1,15 @@
 name: Build RDT dashboard
 
+# The schedule is deliberately switched off. This workflow publishes to GitHub
+# Pages, and THIS REPOSITORY IS PUBLIC, so every run put all 130-odd individual
+# submissions - province, OD, health centre, position, every answer - on an open
+# URL. The live dashboard now runs on Cloudflare Pages instead (see
+# CLOUDFLARE.md), where the data is fetched per request and never committed.
+#
+# Kept as a manual button so the Pages route still works if Cloudflare is ever
+# unavailable. Read the warning above before pressing it.
 on:
-  schedule:
-    # Every 5 minutes - the shortest interval GitHub Actions accepts.
-    # In practice runs are often late and some are skipped when GitHub is busy;
-    # treat this as "a few times an hour", not a guarantee. See the notes in
-    # DEPLOY.md if the dashboard starts lagging or Pages deploys get throttled.
-    - cron: "*/5 * * * *"
-  workflow_dispatch:        # adds a "Run workflow" button you can press any time
+  workflow_dispatch:        # "Run workflow" button, nothing automatic
 
 permissions:
   contents: read
@@ -34,7 +36,7 @@ jobs:
       # ever drift apart, fail loudly rather than publish a dashboard that
       # mislabels results.
       - name: Check the form and script still agree
-        run: python verify_form_sync.py CNM_RDT_PrePostTest_KoboXLSForm_v3.xlsx
+        run: python verify_form_sync.py CNM_RDT_PrePostTest_KoboXLSForm_v5.xlsx
 
       - name: Build the dashboard from Kobo
         env:

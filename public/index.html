@@ -493,9 +493,10 @@ tfoot .tot,#tracking-tbody tr.tot td{font-weight:800;background:#f4f7fc;}
 <script>
 // ---------------------------------------------------------------------------
 // LIVE BUILD. The static build has its payload injected here at build time; this
-// one asks the Netlify function, which holds the Kobo token server-side and does
-// the scoring with the same logic. Reloading the page therefore shows current
-// submissions.
+// one asks /api/data, which holds the Kobo token server-side and does the
+// scoring with the same logic. Reloading the page therefore shows current
+// submissions. The same file works on Cloudflare Pages and on Netlify - the
+// page does not care which one is answering.
 // ---------------------------------------------------------------------------
 let DASHBOARD_DATA = null;
 let RAW_CSV = null;
